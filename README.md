@@ -14,8 +14,7 @@
 
 ---
 
-**TriHead-GAN** is a Transformer-based adversarial framework specifically designed
-for **multivariate carbon emission time series generation under data scarcity**.
+**TriHead-GAN** is a Transformer-based adversarial framework specifically designed for **multivariate carbon emission time series generation under data scarcity**.
 It pairs a **Transformer-based generator** with a **Triple-Head Discriminator**
 that simultaneously supervises three complementary aspects of the joint sequence
 distribution — its *marginal*, *conditional*, and *transition* components —
