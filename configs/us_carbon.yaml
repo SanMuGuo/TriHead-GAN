@@ -1,0 +1,4 @@
+data:
+  dataset: usCarbon
+  window_size: 24
+  stride: 12

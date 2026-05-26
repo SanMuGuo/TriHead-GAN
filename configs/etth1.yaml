@@ -1,0 +1,4 @@
+data:
+  dataset: ETTh1
+  window_size: 24
+  stride: 12

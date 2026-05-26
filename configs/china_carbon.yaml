@@ -1,0 +1,4 @@
+data:
+  dataset: chinaCarbon
+  window_size: 24
+  stride: 12
