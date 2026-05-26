@@ -34,7 +34,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "spectral_norm": True,
     },
     "training": {
-        "epochs": 3000,
+        "epochs": 1000,
         "lr": 0.0001,
         "n_critic": 5,
         "lambda_gp": 10.0,
