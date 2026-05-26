@@ -67,7 +67,8 @@ GPU 训练请安装与显卡驱动匹配的 CUDA 版 PyTorch（参见 <https://p
 
 ## 📦 数据准备
 
-仓库**不包含**数据集。请将 CSV 文件放到本地 `dataset/` 目录（或用 `--data_dir` 指定）：
+论文中使用的三份公开数据集**已随仓库一同提供**，存放在 `dataset/` 目录下，开箱即可
+复现公开数据上的实验。如果你把数据放到了其它位置，可通过 `--data_dir` 指定：
 
 ```text
 dataset/
@@ -82,11 +83,15 @@ dataset/
 | `chinaCarbon` | 7     | 中国碳排放相关多变量序列      |
 | `usCarbon`    | 7     | 美国碳排放相关多变量序列      |
 
+> 论文中自采的长沙（Changsha Carbon）数据集因数据授权原因**未随仓库提供**。
+
 ### 数据来源
 
-- **ETTh1** 可从 [Time Series Library (TSLib)](https://github.com/thuml/Time-Series-Library)
-  的数据包获取，原始来源为 [ETDataset](https://github.com/zhouhaoyi/ETDataset) 项目。
-- **chinaCarbon / usCarbon** 可基于 [Carbon Monitor](https://carbonmonitor.org)
+仓库中分发的 CSV 在上游数据基础上做了轻量预处理，使用时请引用原始来源：
+
+- **ETTh1** —— 取自 [Time Series Library (TSLib)](https://github.com/thuml/Time-Series-Library)
+  的数据包，原始来源为 [ETDataset](https://github.com/zhouhaoyi/ETDataset) 项目。
+- **chinaCarbon / usCarbon** —— 基于 [Carbon Monitor](https://carbonmonitor.org)
   发布的近实时 CO₂ 排放数据构建。
 
 ### CSV 格式约定
@@ -119,7 +124,7 @@ python scripts/run_experiment.py train \
     --dataset chinaCarbon \
     --data_dir dataset \
     --output_dir outputs \
-    --epochs 3000 \
+    --epochs 1000 \
     --batch_size 32 \
     --lr 1e-4 \
     --seed 42 \
@@ -174,7 +179,7 @@ python scripts/run_experiment.py all --dataset ETTh1
 
 各数据集 YAML 只携带数据集相关字段（窗口大小、步长），其余回退到默认值。任何字段都可在命令行覆盖。
 
-关键默认值：`window_size=24`、`stride=12`、`epochs=3000`、`batch_size=32`、`lr=1e-4`、
+关键默认值：`window_size=24`、`stride=12`、`epochs=1000`、`batch_size=32`、`lr=1e-4`、
 `n_critic=5`、`lambda_gp=10`，生成器 `d_model=128 / nhead=8 / num_layers=4`，默认开启谱归一化，
 `n_generate=1000`。
 

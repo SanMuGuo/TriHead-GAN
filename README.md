@@ -72,8 +72,9 @@ For GPU training, install the CUDA-enabled PyTorch build that matches your drive
 
 ## 📦 Data preparation
 
-Datasets are **not** included in this repository. Place your CSV files under a local
-`dataset/` directory (or point to it with `--data_dir`):
+The three public datasets used in our experiments are **shipped with this repository**
+under `dataset/`, so no extra download is required to reproduce the public-data results.
+If you keep them elsewhere, pass the directory via `--data_dir`:
 
 ```text
 dataset/
@@ -88,13 +89,19 @@ dataset/
 | `chinaCarbon` | 7        | Multivariate carbon-emission series                |
 | `usCarbon`    | 7        | Multivariate carbon-emission series                |
 
+> The self-collected Changsha Carbon dataset reported in the paper is **not** included
+> here for data-licensing reasons.
+
 ### Data sources
 
-- **ETTh1** is available from the
-  [Time Series Library (TSLib)](https://github.com/thuml/Time-Series-Library) data pack
-  and originates from the [ETDataset](https://github.com/zhouhaoyi/ETDataset) project.
-- **chinaCarbon / usCarbon** can be constructed from the near-real-time CO₂ emission
-  data published by [Carbon Monitor](https://carbonmonitor.org).
+The bundled CSVs are redistributed (with light preprocessing) from the following
+upstream releases — please cite the original sources if you use them:
+
+- **ETTh1** — from the
+  [Time Series Library (TSLib)](https://github.com/thuml/Time-Series-Library) data pack,
+  originally released by the [ETDataset](https://github.com/zhouhaoyi/ETDataset) project.
+- **chinaCarbon / usCarbon** — constructed from the near-real-time CO₂ emission data
+  published by [Carbon Monitor](https://carbonmonitor.org).
 
 ### CSV format conventions
 
@@ -127,7 +134,7 @@ python scripts/run_experiment.py train \
     --dataset chinaCarbon \
     --data_dir dataset \
     --output_dir outputs \
-    --epochs 3000 \
+    --epochs 1000 \
     --batch_size 32 \
     --lr 1e-4 \
     --seed 42 \
@@ -184,7 +191,7 @@ The per-dataset YAMLs only carry dataset-specific fields (window size, stride);
 everything else falls back to the defaults. Any field can be overridden on the
 command line.
 
-Key defaults: `window_size=24`, `stride=12`, `epochs=3000`, `batch_size=32`,
+Key defaults: `window_size=24`, `stride=12`, `epochs=1000`, `batch_size=32`,
 `lr=1e-4`, `n_critic=5`, `lambda_gp=10`, generator `d_model=128 / nhead=8 /
 num_layers=4`, spectral normalization enabled, `n_generate=1000`.
 
