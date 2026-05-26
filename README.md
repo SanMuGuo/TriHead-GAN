@@ -28,33 +28,13 @@ injection) and an **anti-smoothing loss**, the model produces synthetic windows 
 preserve both the joint distribution across variables and the local/auto-correlation
 structure over time.
 
-## ✨ Highlights
-
-- **Transformer generator** with sinusoidal positional encoding, a local temporal
-  Conv1D residual block, and learnable per-step noise injection to combat the
-  over-smoothing typical of attention-only generators.
-- **Triple-head discriminator** with a dedicated, *leakage-free* regression branch
-  (the target column is never fed into the representation used to predict it).
-- **Stable WGAN-GP training**: gradient penalty, optional spectral normalization,
-  EMA of generator weights, cosine-annealing LR, gradient clipping, and AMP
-  (mixed precision) on CUDA.
-- **Anti-smoothing loss** matching both the mean and std of the per-feature
-  absolute first-difference distribution.
-- **Downstream evaluation** built in: TRTR / TSTR / TRTR+Aug with LSTM, GRU, and
-  Transformer predictors.
-- **Quality metrics** module: discriminative score, predictive score, MMD, FID,
-  and ACF difference, plus t-SNE / ACF / training-curve plots.
-
 ## 🧭 Method overview
 
 <div align="center">
   <img src="assets/architecture.png" alt="Carbon-TGAN / TriHead-GAN overall architecture" width="820">
-  <br>
-  <em>Overall architecture: a Transformer generator and a triple-head (D / R / T) discriminator.</em>
 </div>
 
-Data is min-max scaled to `[0, 1]` at load time and rescaled to `[-1, 1]` internally
-to match the `Tanh` generator; generated samples are mapped back to `[0, 1]`.
+
 
 ## 📁 Repository structure
 

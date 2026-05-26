@@ -24,28 +24,13 @@ Carbon-TGAN（在论文中称为 **TriHead-GAN**）面向**样本稀缺、隐私
 配合 Transformer 生成器（局部时序卷积 + 逐步噪声注入）与 **anti-smoothing 损失**，模型生成的
 合成窗口既能保留变量间的联合分布，又能保留时间维度上的局部波动与自相关结构。
 
-## ✨ 特性
-
-- **Transformer 生成器**：正弦位置编码 + 局部时序 Conv1D 残差块 + 可学习的逐步噪声注入，
-  缓解纯注意力生成器常见的过平滑问题。
-- **三头判别器**：R-Head 拥有**独立、无泄漏**的回归分支（目标列绝不进入用于预测它自己的表示）。
-- **稳定的 WGAN-GP 训练**：梯度惩罚、可选谱归一化、生成器权重 EMA、余弦退火学习率、梯度裁剪，
-  以及 CUDA 上的 AMP 混合精度。
-- **Anti-smoothing 损失**：同时匹配逐特征绝对一阶差分分布的均值与标准差。
-- **内置下游评估**：TRTR / TSTR / TRTR+Aug，预测器涵盖 LSTM、GRU、Transformer。
-- **质量指标模块**：discriminative score、predictive score、MMD、FID、ACF 差异，
-  并附 t-SNE / ACF / 训练曲线绘图工具。
-
 ## 🧭 方法概览
 
 <div align="center">
   <img src="assets/architecture.png" alt="Carbon-TGAN / TriHead-GAN 整体架构" width="820">
-  <br>
-  <em>整体架构：Transformer 生成器 + 三头（D / R / T）判别器。</em>
 </div>
 
-数据在加载时被 min-max 归一化到 `[0, 1]`，内部再缩放到 `[-1, 1]` 以匹配 `Tanh` 生成器；
-生成样本会被映射回 `[0, 1]`。
+
 
 ## 📁 目录结构
 
