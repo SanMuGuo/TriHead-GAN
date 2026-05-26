@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🌍 Carbon-TGAN
+# 🌍 TriHead-GAN
 
-**基于 Transformer 的三头判别器 GAN，用于多变量时间序列生成与数据增强**
+**用于碳排放时间序列生成的、带三头判别器的生成对抗网络**
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
@@ -14,23 +14,32 @@
 
 ---
 
-Carbon-TGAN（在论文中称为 **TriHead-GAN**）面向**样本稀缺、隐私敏感**的碳排放与能源时间序列。
-它在 WGAN-GP 框架上引入 **三头判别器（Triple-Head Discriminator）**，同时监督三个互补属性：
+**TriHead-GAN** 是一个面向**数据稀缺的多变量碳排放时间序列生成**而专门设计的、
+基于 Transformer 的对抗框架。它由一个 **基于 Transformer 的生成器** 与一个
+**三头判别器（Triple-Head Discriminator）** 组成；三个判别头由三条并行的 CNN 分支分别支撑，
+从联合序列分布的**边缘**、**条件**与**转移**三个互补维度同时进行监督：
 
-- **D-Head** —— 样本是否真实？（Wasserstein critic）
-- **R-Head** —— 变量间关系是否一致？（无泄漏的跨变量回归）
-- **T-Head** —— 时间动态是否可信？（一阶差分预测）
+- **D-Head**（分布真实性）—— 独立的 3 层、带谱归一化的 1D-CNN 分支之上的 Wasserstein critic，
+  在 WGAN-GP 框架下稳定地约束边缘分布。
+- **R-Head**（跨变量依赖）—— 独立的 3 层 1D-CNN 分支，**仅以去掉目标列**的非目标特征作为输入
+  （无泄漏），在每个时间步回归目标变量（如 CO₂ 浓度），强制变量间的结构性一致。
+- **T-Head**（时间动态）—— 独立的 2 层**因果** 1D-CNN 分支，预测相邻时间步差分，约束序列的逐步
+  转移规律。
 
-配合 Transformer 生成器（局部时序卷积 + 逐步噪声注入）与 **anti-smoothing 损失**，模型生成的
-合成窗口既能保留变量间的联合分布，又能保留时间维度上的局部波动与自相关结构。
+生成器把随机噪声 $\mathbf{z}\!\in\!\mathbb{R}^{T\times d_z}$ 依次经过线性投影 + 正弦位置编码、
+$L$ 层 Transformer 编码层（建模全局时间依赖）、带残差的局部时序卷积模块（补充细粒度局部动态）、
+逐时间步可学习幅度的噪声注入（增加时间多样性），最终通过 Tanh 输出约束到 $[-1, 1]$。训练采用
+WGAN-GP 框架，所有辅助损失权重按 epoch 线性 warmup；并引入 **anti-smoothing 损失**，同时匹配
+真实与生成序列在每个特征上 **绝对一阶差分** 分布的 **均值与标准差**，避免生成器将局部波动塌缩
+成一条过平滑的窄带。
 
 ## 🧭 方法概览
 
 <div align="center">
-  <img src="assets/architecture.png" alt="Carbon-TGAN / TriHead-GAN 整体架构" width="820">
+  <img src="assets/architecture.png" alt="TriHead-GAN 整体架构" width="820">
+  <br>
+  <sub><em>Transformer 生成器输出的时间序列经判别器中三条并行 CNN 分支分别处理，分别送入 D-Head（WGAN 真实性）、R-Head（无泄漏的跨变量回归）与 T-Head（因果时间一致性）。</em></sub>
 </div>
-
-
 
 ## 📁 目录结构
 
@@ -44,7 +53,7 @@ Carbon-TGAN（在论文中称为 **TriHead-GAN**）面向**样本稀缺、隐私
 │   └── run_experiment.py    # 命令行入口：train / tstr / all
 ├── src/
 │   ├── data/                # 预处理、滑动窗口、DataLoader 工厂
-│   ├── models/              # 生成器、判别器、DNN 回归器、CarbonTGAN
+│   ├── models/              # 生成器、判别器、DNN 回归器、CarbonTGAN 训练管理器
 │   ├── evaluation/          # 质量指标 + 可视化
 │   └── utils/               # 配置加载、随机种子、GPU 批缓存
 ├── requirements.txt
@@ -83,16 +92,15 @@ dataset/
 | `chinaCarbon` | 7     | 中国碳排放相关多变量序列      |
 | `usCarbon`    | 7     | 美国碳排放相关多变量序列      |
 
-> 论文中自采的长沙（Changsha Carbon）数据集因数据授权原因**未随仓库提供**。
+> 很抱歉，论文中使用的 `changshaCarbon` 数据集来自一个仍在进行中的研究项目，暂时无法
+> 随本仓库一同公开。基于上述三份公开数据集，即可完整复现论文中公开数据上的所有实验。
 
 ### 数据来源
 
 仓库中分发的 CSV 在上游数据基础上做了轻量预处理，使用时请引用原始来源：
 
-- **ETTh1** —— 取自 [Time Series Library (TSLib)](https://github.com/thuml/Time-Series-Library)
-  的数据包，原始来源为 [ETDataset](https://github.com/zhouhaoyi/ETDataset) 项目。
-- **chinaCarbon / usCarbon** —— 基于 [Carbon Monitor](https://carbonmonitor.org)
-  发布的近实时 CO₂ 排放数据构建。
+- **ETTh1** —— 取自 [Time Series Library (TSLib)](https://github.com/thuml/Time-Series-Library) 的数据包，原始来源为 [ETDataset](https://github.com/zhouhaoyi/ETDataset) 项目。
+- **chinaCarbon / usCarbon** —— 基于 [Carbon Monitor](https://carbonmonitor.org) 发布的近实时 CO₂ 排放数据构建。
 
 ### CSV 格式约定
 
@@ -114,7 +122,7 @@ dataset/
 python scripts/run_experiment.py train --dataset ETTh1
 ```
 
-该命令训练 Carbon-TGAN，并在 `outputs/` 下生成带时间戳的运行目录，包含最终 checkpoint
+该命令训练 TriHead-GAN，并在 `outputs/` 下生成带时间戳的运行目录，包含最终 checkpoint
 和一批生成样本。
 
 常用覆盖参数：

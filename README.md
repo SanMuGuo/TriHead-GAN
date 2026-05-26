@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🌍 Carbon-TGAN
+# 🌍 TriHead-GAN
 
-**A Transformer-based, triple-head GAN for multivariate time-series generation & augmentation**
+**A Generative Adversarial Network with Triple-Head Discriminator for Carbon Emission Time Series Generation**
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
@@ -14,27 +14,42 @@
 
 ---
 
-Carbon-TGAN (referred to as **TriHead-GAN** in our paper) targets scarce,
-privacy-sensitive carbon-emission and energy time series. It combines a WGAN-GP
-objective with a **triple-head discriminator** that supervises three complementary
-properties at once:
+**TriHead-GAN** is a Transformer-based adversarial framework specifically designed
+for **multivariate carbon emission time series generation under data scarcity**.
+It pairs a **Transformer-based generator** with a **Triple-Head Discriminator**
+that simultaneously supervises three complementary aspects of the joint sequence
+distribution — its *marginal*, *conditional*, and *transition* components —
+through three parallel CNN branches, each feeding its own task-specific head:
 
-- **D-Head** — is the sample realistic? (Wasserstein critic)
-- **R-Head** — are the cross-variable relationships consistent? (leakage-free regression)
-- **T-Head** — is the temporal dynamic plausible? (first-difference prediction)
+- **D-Head** — *distributional authenticity.* A Wasserstein critic on top of a
+  dedicated 3-layer 1D-CNN with spectral normalization, providing stable WGAN-GP
+  training of the marginal distribution.
+- **R-Head** — *cross-variable dependency.* A separate 3-layer 1D-CNN branch fed
+  only with the **non-target** features (leakage-free input), regressing the
+  target variable (e.g., CO₂ concentration) at each step to enforce
+  inter-variable structural consistency.
+- **T-Head** — *step-wise temporal coherence.* A separate 2-layer **causal**
+  1D-CNN branch that predicts adjacent-step differences, constraining the local
+  transition dynamics of the sequence.
 
-Together with a Transformer generator (local temporal convolution + per-step noise
-injection) and an **anti-smoothing loss**, the model produces synthetic windows that
-preserve both the joint distribution across variables and the local/auto-correlation
-structure over time.
+The generator processes random noise $\mathbf{z}\!\in\!\mathbb{R}^{T\times d_z}$
+through linear projection + sinusoidal positional encoding, $L$ Transformer
+encoder layers (for global temporal dependencies), a local temporal convolution
+module with a residual connection (for fine-grained local dynamics), and
+learnable-scale per-step noise injection (for temporal diversity), with a final
+Tanh output bounding samples to $[-1, 1]$. Training follows the WGAN-GP framework
+with linearly warmed-up auxiliary loss weights, augmented by an **anti-smoothing
+loss** that matches both the **mean and standard deviation** of the per-feature
+absolute first-difference distribution — preventing the generator from collapsing
+local variability into an over-smoothed band.
 
 ## 🧭 Method overview
 
 <div align="center">
-  <img src="assets/architecture.png" alt="Carbon-TGAN / TriHead-GAN overall architecture" width="820">
+  <img src="assets/architecture.png" alt="TriHead-GAN overall architecture" width="820">
+  <br>
+  <sub><em>The Transformer generator emits time series that the discriminator processes through three parallel CNN branches, each feeding its own head: D-Head (WGAN authenticity), R-Head (cross-variable regression with leakage-free input), and T-Head (causal temporal coherence).</em></sub>
 </div>
-
-
 
 ## 📁 Repository structure
 
@@ -48,7 +63,7 @@ structure over time.
 │   └── run_experiment.py    # CLI entry point: train / tstr / all
 ├── src/
 │   ├── data/                # Preprocessing, sliding windows, DataLoader factory
-│   ├── models/              # Generator, Discriminator, DNN regressor, CarbonTGAN
+│   ├── models/              # Generator, Discriminator, DNN regressor, CarbonTGAN trainer
 │   ├── evaluation/          # Quality metrics + visualization
 │   └── utils/               # Config loading, seeding, GPU batch cache
 ├── requirements.txt
@@ -89,8 +104,11 @@ dataset/
 | `chinaCarbon` | 7        | Multivariate carbon-emission series                |
 | `usCarbon`    | 7        | Multivariate carbon-emission series                |
 
-> The self-collected Changsha Carbon dataset reported in the paper is **not** included
-> here for data-licensing reasons.
+> We sincerely apologize that the `changshaCarbon` dataset reported in the paper
+> cannot be released here, as it was collected under an ongoing research project
+> and is not yet available for public distribution. The three public datasets
+> shipped above are sufficient to reproduce all public-data experiments in the
+> paper.
 
 ### Data sources
 
@@ -124,7 +142,7 @@ The CLI exposes three subcommands via `scripts/run_experiment.py`.
 python scripts/run_experiment.py train --dataset ETTh1
 ```
 
-This trains Carbon-TGAN and writes a timestamped run directory under `outputs/`,
+This trains TriHead-GAN and writes a timestamped run directory under `outputs/`,
 containing the final checkpoint and a set of generated samples.
 
 Common overrides:
