@@ -32,7 +32,7 @@ through three parallel CNN branches, each feeding its own task-specific head:
   1D-CNN branch that predicts adjacent-step differences, constraining the local
   transition dynamics of the sequence.
 
-The generator processes random noise $\mathbf{z}\!\in\!\mathbb{R}^{T\times d_z}$
+The generator processes random noise $\mathbf{z}\\in\\mathbb{R}^{T\times d_z}$
 through linear projection + sinusoidal positional encoding, $L$ Transformer
 encoder layers (for global temporal dependencies), a local temporal convolution
 module with a residual connection (for fine-grained local dynamics), and
